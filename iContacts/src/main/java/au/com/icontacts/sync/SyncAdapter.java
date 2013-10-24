@@ -50,7 +50,6 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
          *  - Handle data conflicts
          *  - Close connections, clean up temp files and caches
          */
-
     }
 
 }

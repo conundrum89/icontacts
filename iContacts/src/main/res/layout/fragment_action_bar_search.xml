@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<android.support.v7.widget.SearchView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:icontacts="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/action_bar_search"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    icontacts:queryHint="@string/search"
+    icontacts:iconifiedByDefault="false" />

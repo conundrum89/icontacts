@@ -1,14 +1,63 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="au.com.iproperty.iContacts"
+    package="au.com.icontacts"
     android:versionCode="1"
     android:versionName="1.0">
 
-    <uses-sdk android:minSdkVersion="7" android:targetSdkVersion="18" />
+    <uses-sdk android:minSdkVersion="8" android:targetSdkVersion="18" />
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.READ_SYNC_SETTINGS" />
+    <uses-permission android:name="android.permission.WRITE_SYNC_SETTINGS" />
+    <uses-permission android:name="android.permission.AUTHENTICATE_ACCOUNTS" />
+    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
+    <uses-permission android:name="android.permission.MANAGE_ACCOUNTS" />
 
     <application android:allowBackup="true"
-        android:label="@string/app_name"
-        android:icon="@drawable/ic_launcher"
-        android:theme="@style/AppTheme">
+                 android:label="@string/app_name"
+                 android:icon="@drawable/ic_launcher"
+                 android:theme="@style/AppTheme">
+        
+        <activity android:name=".activities.ContactListActivity"
+                  android:label="@string/app_name"
+                  android:theme="@style/Theme.AppCompat.Light"
+                  android:uiOptions="splitActionBarWhenNarrow"
+                  android:windowSoftInputMode="adjustPan|stateHidden">
+            <meta-data android:name="android.support.UI_OPTIONS"
+                       android:value="splitActionBarWhenNarrow" />
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".activities.LoginActivity"
+                  android:configChanges="orientation|keyboardHidden|screenSize"
+                  android:label="@string/app_name"
+                  android:theme="@style/Theme.AppCompat.Light"
+                  android:windowSoftInputMode="adjustPan|stateHidden" />
+
+        <service android:name="au.com.icontacts.authenticator.AuthenticatorService">
+            <intent-filter>
+                <action android:name="android.accounts.AccountAuthenticator" />
+            </intent-filter>
+            <meta-data android:name="android.accounts.AccountAuthenticator"
+                       android:resource="@xml/authenticator" />
+        </service>
+
+        <service android:name="au.com.icontacts.sync.SyncService"
+                 android:exported="true"
+                 android:process=":sync">
+            <intent-filter>
+                <action android:name="android.content.SyncAdapter" />
+            </intent-filter>
+            <meta-data android:name="android.content.SyncAdapter"
+                       android:resource="@xml/syncadapter" />
+        </service>
+
+        <provider android:name="au.com.icontacts.data.StubProvider"
+                  android:authorities="au.com.icontacts.provider"
+                  android:exported="false"
+                  android:syncable="true" />
 
     </application>
 
