@@ -1,11 +1,5 @@
 package au.com.icontacts.activities;
 
-import android.accounts.Account;
-import android.accounts.AccountManager;
-import android.accounts.AccountManagerCallback;
-import android.accounts.AccountManagerFuture;
-import android.accounts.AuthenticatorException;
-import android.accounts.OperationCanceledException;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.FragmentTransaction;
@@ -18,11 +12,10 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 
-import java.io.IOException;
-
 import au.com.icontacts.R;
 import au.com.icontacts.adapters.ContactListFragmentPagerAdapter;
 import au.com.icontacts.adapters.LockableViewPager;
+import au.com.icontacts.sync.IDashApi;
 
 /**
  * Displays three lists of contacts for viewing Vendors, Landlords, or All Contacts.
@@ -35,10 +28,6 @@ public class ContactListActivity extends ActionBarActivity
     private LockableViewPager mPager;
     private ActionBar mActionBar;
     private SearchView mSearchView;
-
-    private AccountManager mAccountManager;
-    private String mAuthToken;
-    private Account mConnectedAccount;
 
     private ViewPager.SimpleOnPageChangeListener mPageChangeListener = new ViewPager.SimpleOnPageChangeListener() {
         @Override
@@ -83,8 +72,6 @@ public class ContactListActivity extends ActionBarActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_contact_list);
 
-        mAccountManager = AccountManager.get(this);
-
         mPager = (LockableViewPager) findViewById(R.id.contact_list_pager);
         mPager.setAdapter(new ContactListFragmentPagerAdapter(getSupportFragmentManager()));
         mPager.setOnPageChangeListener(mPageChangeListener);
@@ -109,32 +96,7 @@ public class ContactListActivity extends ActionBarActivity
         mSearchView.setOnQueryTextFocusChangeListener(this);
 
         // Account stuff
-        getTokenForAccountCreateIfNeeded("idashboard.com.au", "Full access");
-    }
-
-    private void getTokenForAccountCreateIfNeeded(final String accountType, final String authTokenType) {
-
-        mAccountManager.getAuthTokenByFeatures(accountType, authTokenType, null, this, null, null,
-                new AccountManagerCallback<Bundle>() {
-                    @Override
-                    public void run(AccountManagerFuture<Bundle> future) {
-                        try {
-                            Bundle bundle = future.getResult();
-                            mAuthToken = bundle.getString(AccountManager.KEY_AUTHTOKEN);
-                            if (mAuthToken != null) {
-                                String accountName = bundle.getString(AccountManager.KEY_ACCOUNT_NAME);
-                                mConnectedAccount = new Account(accountName, accountType);
-                            }
-                        } catch (OperationCanceledException e) {
-                            // TODO: Handle exception
-                        } catch (IOException e) {
-                            // TODO: Handle exception
-                        } catch (AuthenticatorException e) {
-                            // TODO: Handle exception
-                        }
-                    }
-                }
-                , null);
+        IDashApi.connect(this, "idashboard.com.au", "Full access");
     }
 
     @Override

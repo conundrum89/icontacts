@@ -1,35 +1,30 @@
 package au.com.icontacts.activities;
 
 import android.accounts.Account;
-import android.accounts.AccountAuthenticatorActivity;
 import android.accounts.AccountManager;
-import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.view.KeyEvent;
+import android.support.v4.app.DialogFragment;
 import android.view.View;
 import android.view.Window;
-import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
 
 import au.com.icontacts.R;
+import au.com.icontacts.fragments.LoginDialogFragment;
+import au.com.icontacts.sync.IDashApi;
 
 /**
  * Displays a pretty login page with fields for the username and password.
  * @author Matthew Rowland
  */
 
-public class LoginActivity extends AccountAuthenticatorActivity
-        implements  View.OnClickListener, TextView.OnEditorActionListener {
-    private Button mLoginButton;
-    private EditText mUsernameField;
-    private EditText mPasswordField;
+public class LoginActivity extends AccountAuthenticatorFragmentActivity
+        implements LoginDialogFragment.LoginDialogListener {
 
     // Account-related stuff
     public static final String AUTHORITY = "au.com.icontacts.provider";
@@ -59,21 +54,6 @@ public class LoginActivity extends AccountAuthenticatorActivity
             SECONDS_PER_MINUTE *
             MILLISECONDS_PER_SECOND;
 
-    /** Sets the "GO" button on the soft keyboard to trigger a login event. */
-    public boolean onEditorAction(TextView view, int action, KeyEvent event) {
-        if (action == EditorInfo.IME_ACTION_GO) {
-            loginWithFormFields();
-        }
-        return false;
-    }
-
-    /** Sets the Go button of the form to trigger a login event. */
-    public void onClick(View v) {
-        loginWithFormFields();
-    }
-
-
-
     /** Disables the title bar for the Login page. */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -82,6 +62,10 @@ public class LoginActivity extends AccountAuthenticatorActivity
 
         mAccountManager = AccountManager.get(getBaseContext());
         mAuthTokenType = "Full access";
+
+        DialogFragment loginFragment = new LoginDialogFragment();
+        loginFragment.setCancelable(false);
+        loginFragment.show(getSupportFragmentManager(), "login");
 
         // this will go elsewhere
         // ContentResolver.setSyncAutomatically(mAccount, AUTHORITY, false);
@@ -94,38 +78,37 @@ public class LoginActivity extends AccountAuthenticatorActivity
         final SharedPreferences preferences = getSharedPreferences("CurrentUser", MODE_PRIVATE);
 
         setContentView(R.layout.activity_login);
-
-        // set the listeners on button/password/username.
-        // Skip this page entirely if the user is already logged in.
     }
 
     /**
-     * Gets the string values from the username and password form fields, and uses them
-     * to attempt a login with the API.
+     * Gets the string values from the username and password form fields in the login dialog,
+     * and uses them to attempt a login with the API. This method is called by the dialog
+     * when the user presses the Login button, using the Listener callback method.
      */
-    private void loginWithFormFields() {
-//        final String username = mUsernameField.getText().toString();
-//        final String password = mPasswordField.getText().toString();
-//
-//        // new LoginTask(this).execute(username, password);
-//        // TODO: Move this into a LoginTask class.
-//        new AsyncTask<Void, Void, Intent>() {
-//            @Override
-//            protected Intent doInBackground(Void... params) {
-////                String authToken = IDashApi.userSignIn(userName, password, mAuthTokenType);
-//                final Intent result = new Intent();
-//                result.putExtra(AccountManager.KEY_ACCOUNT_NAME, username);
-//                result.putExtra(AccountManager.KEY_ACCOUNT_TYPE, ACCOUNT_TYPE);
-////                result.putExtra(AccountManager.KEY_AUTHTOKEN, authToken);
-//                result.putExtra(PARAM_USER_PASS, password);
-//                return result;
-//            }
-//
-//            @Override
-//            protected void onPostExecute(Intent intent) {
-//                finishLogin(intent);
-//            }
-//        }.execute();
+    @Override
+    public void onLoginClick(LoginDialogFragment dialog) {
+        final String username = dialog.usernameField.getText().toString();
+        final String password = dialog.passwordField.getText().toString();
+
+        // new LoginTask(this).execute(username, password);
+        // TODO: Move this into a LoginTask class.
+        new AsyncTask<Void, Void, Intent>() {
+            @Override
+            protected Intent doInBackground(Void... params) {
+                String authToken = IDashApi.userLogin(username, password, mAuthTokenType);
+                final Intent result = new Intent();
+                result.putExtra(AccountManager.KEY_ACCOUNT_NAME, username);
+                result.putExtra(AccountManager.KEY_ACCOUNT_TYPE, ACCOUNT_TYPE);
+                result.putExtra(AccountManager.KEY_AUTHTOKEN, authToken);
+                result.putExtra(PARAM_USER_PASS, password);
+                return result;
+            }
+
+            @Override
+            protected void onPostExecute(Intent intent) {
+                finishLogin(intent);
+            }
+        }.execute();
     }
 
     private void finishLogin(Intent intent) {

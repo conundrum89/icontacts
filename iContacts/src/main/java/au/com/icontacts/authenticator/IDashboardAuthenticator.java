@@ -107,7 +107,7 @@ public class IDashboardAuthenticator extends AbstractAccountAuthenticator {
     // Displayed when another application requests an authtoken from this authenticator
     @Override
     public String getAuthTokenLabel(String authTokenType) {
-        return mContext.getResources().getString(R.string.full_access_authtoken_label);
+        return mContext.getString(R.string.full_access_authtoken_label);
     }
 
     // Updating user credentials is not supported (and probably doesn't need to be?)

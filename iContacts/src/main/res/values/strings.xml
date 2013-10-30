@@ -2,6 +2,11 @@
     <string name="app_name">iContacts</string>
     <string name="account_type">iDashboard</string>
 
+    <string name="client_id">lyexzv19zd79eiyXZmdRdj4YIzDTheGR14Ph8oUw</string>
+    <string name="client_secret">RiMwAXwOqTijrltk8uC0N4G5Vz3rmQVoJbijIIcW</string>
+
+    <string name="auth_url">http://www.idashboard.com.au/oauth/token</string>
+
     <string name="full_access_authtoken_label">Full access to an iDashboard account</string>
 
     <string name="search">Search</string>
@@ -13,4 +18,10 @@
     <string name="vendors">Vendors</string>
     <string name="landlords">Landlords</string>
     <string name="contacts">Contacts</string>
+
+    <string name="login">Login</string>
+    <string name="username">Username</string>
+    <string name="password">Password</string>
+    <string name="cancel">Cancel</string>
+    <string name="login_cannot_be_blank">Username and Password cannot be blank</string>
 </resources>
