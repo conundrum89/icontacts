@@ -24,4 +24,5 @@
     <string name="password">Password</string>
     <string name="cancel">Cancel</string>
     <string name="login_cannot_be_blank">Username and Password cannot be blank</string>
+    <string name="invalid_login">Incorrect username or password</string>
 </resources>

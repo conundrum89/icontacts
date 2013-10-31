@@ -9,9 +9,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 
 import au.com.icontacts.R;
 import au.com.icontacts.activities.LoginActivity;
+import au.com.icontacts.sync.IDashApi;
 
 /**
  * Implements AbstractAccountAuthenticator to connect to the IDashboard API.
@@ -83,13 +85,17 @@ public class IDashboardAuthenticator extends AbstractAccountAuthenticator {
         final AccountManager am = AccountManager.get(mContext);
         String authToken = am.peekAuthToken(account, authTokenType);
 
+        Log.i("LoginActivity", "savedAuthToken: " + authToken);
+
         // Give one more try to authenticate the user
         if (TextUtils.isEmpty(authToken)) {
             final String password = am.getPassword(account);
             if (password != null) {
-                // authToken = IDashApi.userSignIn(account.name, password, authTokenType);
+                authToken = IDashApi.userLogin(account.name, password, authTokenType);
             }
         }
+
+        Log.i("LoginActivity", "re-authedToken: " + authToken);
 
         // If we get an authToken, we return it
         if (!TextUtils.isEmpty(authToken)) {

@@ -2,17 +2,13 @@ package au.com.icontacts.activities;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
-import android.content.ContentResolver;
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.view.View;
 import android.view.Window;
-import android.widget.Button;
-import android.widget.EditText;
+import android.widget.Toast;
 
 import au.com.icontacts.R;
 import au.com.icontacts.fragments.LoginDialogFragment;
@@ -29,13 +25,10 @@ public class LoginActivity extends AccountAuthenticatorFragmentActivity
     // Account-related stuff
     public static final String AUTHORITY = "au.com.icontacts.provider";
     public static final String ACCOUNT_TYPE = "idashboard.com.au";
-    public static final String ACCOUNT = "dummyaccount";
-    private Account mAccount;
 
     // AuthenticatorActivity related stuff
     public final static String ARG_ACCOUNT_TYPE = "ACCOUNT_TYPE";
     public final static String ARG_AUTH_TYPE = "AUTH_TYPE";
-    public final static String ARG_ACCOUNT_NAME = "ACCOUNT_NAME";
     public final static String ARG_IS_ADDING_NEW_ACCOUNT = "IS_ADDING_ACCOUNT";
 
     public static final String KEY_ERROR_MESSAGE = "ERR_MSG";
@@ -75,7 +68,6 @@ public class LoginActivity extends AccountAuthenticatorFragmentActivity
     @Override
     protected void onResume() {
         super.onResume();
-        final SharedPreferences preferences = getSharedPreferences("CurrentUser", MODE_PRIVATE);
 
         setContentView(R.layout.activity_login);
     }
@@ -86,9 +78,13 @@ public class LoginActivity extends AccountAuthenticatorFragmentActivity
      * when the user presses the Login button, using the Listener callback method.
      */
     @Override
-    public void onLoginClick(LoginDialogFragment dialog) {
+    public void onLoginClick(final LoginDialogFragment dialog) {
         final String username = dialog.usernameField.getText().toString();
         final String password = dialog.passwordField.getText().toString();
+
+        dialog.usernameField.setVisibility(View.GONE);
+        dialog.passwordField.setVisibility(View.GONE);
+        dialog.loginActivityIndicator.setVisibility(View.VISIBLE);
 
         // new LoginTask(this).execute(username, password);
         // TODO: Move this into a LoginTask class.
@@ -106,27 +102,37 @@ public class LoginActivity extends AccountAuthenticatorFragmentActivity
 
             @Override
             protected void onPostExecute(Intent intent) {
-                finishLogin(intent);
+                finishLogin(intent, dialog);
             }
         }.execute();
     }
 
-    private void finishLogin(Intent intent) {
-        String username = intent.getStringExtra(AccountManager.KEY_ACCOUNT_NAME);
-        String password = intent.getStringExtra(PARAM_USER_PASS);
-        String accountType = intent.getStringExtra(AccountManager.KEY_ACCOUNT_TYPE);
-        final Account account = new Account(username, accountType);
-        if (getIntent().getBooleanExtra(ARG_IS_ADDING_NEW_ACCOUNT, false)) {
-            String authToken = intent.getStringExtra(AccountManager.KEY_AUTHTOKEN);
-            String authTokenType = mAuthTokenType;
-            // Creating the account on the device and setting the auth token we got
-            mAccountManager.addAccountExplicitly(account, password, null);
-            mAccountManager.setAuthToken(account, authTokenType, authToken);
+    private void finishLogin(Intent intent, LoginDialogFragment dialog) {
+        String authToken = intent.getStringExtra(AccountManager.KEY_AUTHTOKEN);
+
+        dialog.loginActivityIndicator.setVisibility(View.GONE);
+        dialog.usernameField.setVisibility(View.VISIBLE);
+        dialog.passwordField.setVisibility(View.VISIBLE);
+
+        if (authToken != null) {
+            String username = intent.getStringExtra(AccountManager.KEY_ACCOUNT_NAME);
+            String password = intent.getStringExtra(PARAM_USER_PASS);
+            String accountType = intent.getStringExtra(AccountManager.KEY_ACCOUNT_TYPE);
+            final Account account = new Account(username, accountType);
+            if (getIntent().getBooleanExtra(ARG_IS_ADDING_NEW_ACCOUNT, false)) {
+                String authTokenType = mAuthTokenType;
+                // Creating the account on the device and setting the auth token we got
+                mAccountManager.addAccountExplicitly(account, password, null);
+                mAccountManager.setAuthToken(account, authTokenType, authToken);
+            } else {
+                mAccountManager.setPassword(account, password);
+            }
+
+            setAccountAuthenticatorResult(intent.getExtras());
+            setResult(RESULT_OK, intent);
+            finish();
         } else {
-            mAccountManager.setPassword(account, password);
+            Toast.makeText(this, getString(R.string.invalid_login), Toast.LENGTH_LONG).show();
         }
-        setAccountAuthenticatorResult(intent.getExtras());
-        setResult(RESULT_OK, intent);
-        finish();
     }
 }

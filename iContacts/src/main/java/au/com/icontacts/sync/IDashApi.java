@@ -36,7 +36,6 @@ public final class IDashApi {
     public static void connect(Activity activity, final String accountType, final String authTokenType) {
         mContext = activity;
         mAccountManager = AccountManager.get(mContext);
-        Log.i("login", mAccountManager.getAccountsByType(accountType).toString());
         mAccountManager.getAuthTokenByFeatures(accountType, authTokenType, null, activity, null, null,
                 new AccountManagerCallback<Bundle>() {
                     @Override
@@ -44,8 +43,11 @@ public final class IDashApi {
                         try {
                             Bundle bundle = future.getResult();
                             mAuthToken = bundle.getString(AccountManager.KEY_AUTHTOKEN);
+                            Log.i("LoginActivity", "checking Auth token");
                             if (mAuthToken != null) {
+                                Log.i("LoginActivity", mAuthToken);
                                 String accountName = bundle.getString(AccountManager.KEY_ACCOUNT_NAME);
+                                Log.i("LoginActivity", accountName);
                                 mConnectedAccount = new Account(accountName, accountType);
                             }
                         } catch (OperationCanceledException e) {
@@ -73,7 +75,6 @@ public final class IDashApi {
 
     /** Performs a login request to the API. */
     private static String performLoginRequest(URL url, String parameters) {
-        Log.i("login", "performLoginRequest");
         HttpURLConnection connection = null;
         try {
             connection = (HttpURLConnection) url.openConnection();
@@ -89,12 +90,13 @@ public final class IDashApi {
             if (connection.getResponseCode() != 200) { return null; }
 
             JSONObject response = readResponse(connection);
-            Log.i("login", response.toString());
 
             if (response.has("access_token")) {
-                return response.toString();
+                return response.getString("access_token");
             }
         } catch (IOException e) {
+            // TODO: Handle.
+        } catch (JSONException e) {
             // TODO: Handle.
         } finally {
             if (connection != null) { connection.disconnect(); }
@@ -107,8 +109,6 @@ public final class IDashApi {
      * Turns an API response into a usable JSONObject
      * @param connection the connection from which to read the response
      * @return JSONObject parsed from the API response
-     * @throws IOException
-     * @throws JSONException
      */
     private static JSONObject readResponse(HttpURLConnection connection) {
         try {
