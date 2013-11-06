@@ -25,4 +25,6 @@
     <string name="cancel">Cancel</string>
     <string name="login_cannot_be_blank">Username and Password cannot be blank</string>
     <string name="invalid_login">Incorrect username or password</string>
+
+    <string name="sync_title">iDashContacts Sync</string>
 </resources>

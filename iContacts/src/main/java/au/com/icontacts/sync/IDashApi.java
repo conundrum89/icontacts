@@ -9,7 +9,6 @@ import android.accounts.OperationCanceledException;
 import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
-import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -21,6 +20,7 @@ import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.HashMap;
 
 import au.com.icontacts.R;
 
@@ -33,6 +33,9 @@ public final class IDashApi {
     private static String mAuthToken;
     private static Account mConnectedAccount;
 
+    private static final String BASE_URL = "http://www.idashboard.com.au/api/";
+    private static final String CONTACTS = "contacts/";
+
     public static void connect(Activity activity, final String accountType, final String authTokenType) {
         mContext = activity;
         mAccountManager = AccountManager.get(mContext);
@@ -43,11 +46,8 @@ public final class IDashApi {
                         try {
                             Bundle bundle = future.getResult();
                             mAuthToken = bundle.getString(AccountManager.KEY_AUTHTOKEN);
-                            Log.i("LoginActivity", "checking Auth token");
                             if (mAuthToken != null) {
-                                Log.i("LoginActivity", mAuthToken);
                                 String accountName = bundle.getString(AccountManager.KEY_ACCOUNT_NAME);
-                                Log.i("LoginActivity", accountName);
                                 mConnectedAccount = new Account(accountName, accountType);
                             }
                         } catch (OperationCanceledException e) {
@@ -104,6 +104,34 @@ public final class IDashApi {
         return null;
     }
 
+    /** Gets the JSON for a single page of contacts */
+    public static JSONObject getContactPage(int page, int perPage) throws JSONException {
+        HttpURLConnection connection = null;
+
+        HashMap<String, String> params = new HashMap<String, String>();
+        params.put("page", String.valueOf(page));
+        params.put("per_page", String.valueOf(perPage));
+
+        try {
+            connection = getApiConnection(BASE_URL + CONTACTS, params);
+            return readResponse(connection).getJSONObject("results");
+        } finally {
+            if (connection != null) { connection.disconnect(); }
+        }
+    }
+
+    /** Gets an API connection for the desired URL with the desired parameters */
+    private static HttpURLConnection getApiConnection(String urlString, HashMap<String, String> params) {
+        HttpURLConnection connection = null;
+        try {
+            URL url = new URL(urlString + createParamString(params));
+            connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestProperty("Authorization", "Bearer " + mAuthToken);
+        } catch (IOException e) {
+            // TODO: Handle.
+        }
+        return connection;
+    }
 
     /**
      * Turns an API response into a usable JSONObject
@@ -128,16 +156,23 @@ public final class IDashApi {
         return null;
     }
 
+    /** Creates an HTML parameter string from a HashMap, eg: ?param1=value1&param2=value2 */
+    private static String createParamString(HashMap<String, String> params) {
+        StringBuilder sb = new StringBuilder("?");
+        for (String key : params.keySet()) {
+            sb.append(key).append("=").append(params.get(key)).append("&");
+        }
+        sb.deleteCharAt(sb.length());
+        return sb.toString();
+    }
+
+
     private static String generateLoginParameters(String username, String password) {
         StringBuilder sb = new StringBuilder();
-        sb.append("grant_type=password&username=")
-                .append(username)
-                .append("&password=")
-                .append(password)
-                .append("&client_id=")
-                .append(mContext.getString(R.string.client_id))
-                .append("&client_secret=")
-                .append(mContext.getString(R.string.client_secret));
+        sb.append("grant_type=password&username=").append(username)
+                .append("&password=").append(password)
+                .append("&client_id=").append(mContext.getString(R.string.client_id))
+                .append("&client_secret=").append(mContext.getString(R.string.client_secret));
 
         return sb.toString();
     }

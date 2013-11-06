@@ -7,6 +7,7 @@ import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.text.InputType;
+import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -103,10 +104,12 @@ public class LoginDialogFragment extends DialogFragment
         if (usernameField.getText().length() > 0 && passwordField.getText().length() > 0) {
             mListener.onLoginClick(LoginDialogFragment.this);
         } else {
-            Toast.makeText(
+            Toast toast = Toast.makeText(
                     getActivity(),
                     getActivity().getString(R.string.login_cannot_be_blank),
-                    Toast.LENGTH_LONG).show();
+                    Toast.LENGTH_LONG);
+            toast.setGravity(Gravity.CENTER, 0, 0);
+            toast.show();
         }
     }
 

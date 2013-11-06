@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
+import android.view.Gravity;
 import android.view.View;
 import android.view.Window;
 import android.widget.Toast;
@@ -132,7 +133,9 @@ public class LoginActivity extends AccountAuthenticatorFragmentActivity
             setResult(RESULT_OK, intent);
             finish();
         } else {
-            Toast.makeText(this, getString(R.string.invalid_login), Toast.LENGTH_LONG).show();
+            Toast toast = Toast.makeText(this, getString(R.string.invalid_login), Toast.LENGTH_LONG);
+            toast.setGravity(Gravity.CENTER, 0, 0);
+            toast.show();
         }
     }
 }
