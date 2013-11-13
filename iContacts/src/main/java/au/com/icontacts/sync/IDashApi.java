@@ -8,7 +8,9 @@ import android.accounts.AuthenticatorException;
 import android.accounts.OperationCanceledException;
 import android.app.Activity;
 import android.content.Context;
+import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -46,6 +48,7 @@ public final class IDashApi {
                         try {
                             Bundle bundle = future.getResult();
                             mAuthToken = bundle.getString(AccountManager.KEY_AUTHTOKEN);
+                            Log.i("connect", mAuthToken);
                             if (mAuthToken != null) {
                                 String accountName = bundle.getString(AccountManager.KEY_ACCOUNT_NAME);
                                 mConnectedAccount = new Account(accountName, accountType);
@@ -92,12 +95,17 @@ public final class IDashApi {
             JSONObject response = readResponse(connection);
 
             if (response.has("access_token")) {
+                Log.i("accessToken", response.getString("access_token"));
                 return response.getString("access_token");
             }
         } catch (IOException e) {
-            // TODO: Handle.
+            e.printStackTrace();
+            throw new RuntimeException(e);
+            // TODO: Handle properly.
         } catch (JSONException e) {
-            // TODO: Handle.
+            e.printStackTrace();
+            throw new RuntimeException(e);
+            // TODO: Handle properly.
         } finally {
             if (connection != null) { connection.disconnect(); }
         }
@@ -106,31 +114,57 @@ public final class IDashApi {
 
     /** Gets the JSON for a single page of contacts */
     public static JSONObject getContactPage(int page, int perPage) throws JSONException {
-        HttpURLConnection connection = null;
-
         HashMap<String, String> params = new HashMap<String, String>();
         params.put("page", String.valueOf(page));
         params.put("per_page", String.valueOf(perPage));
 
-        try {
-            connection = getApiConnection(BASE_URL + CONTACTS, params);
-            return readResponse(connection).getJSONObject("results");
-        } finally {
-            if (connection != null) { connection.disconnect(); }
-        }
+        HttpURLConnection connection = getApiConnection(BASE_URL + CONTACTS, params);
+        return readResponse(connection).getJSONObject("results");
+    }
+
+    /** Gets full details for a single contact */
+    public static JSONObject getContact(int id) throws JSONException {
+        HttpURLConnection connection = getApiConnection(BASE_URL + CONTACTS + id);
+        return readResponse(connection).getJSONObject("contact");
+    }
+
+    /** Gets an API connection for the desired URL */
+    private static HttpURLConnection getApiConnection(String urlString) {
+        return getApiConnection(urlString, null);
     }
 
     /** Gets an API connection for the desired URL with the desired parameters */
+    @SuppressWarnings("deprecation")
     private static HttpURLConnection getApiConnection(String urlString, HashMap<String, String> params) {
-        HttpURLConnection connection = null;
+        HttpURLConnection connection;
+        Bundle future;
         try {
-            URL url = new URL(urlString + createParamString(params));
+            if (params != null) { urlString += createParamString(params); }
+            URL url = new URL(urlString);
             connection = (HttpURLConnection) url.openConnection();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+                // TODO: Either mAccountManager or mConnectedAccount is null here. WHYYY.
+                future = mAccountManager.getAuthToken(mConnectedAccount, "Full Access", null, true, null, null).getResult();
+            } else {
+                future = mAccountManager.getAuthToken(mConnectedAccount, "Full Access", true, null, null).getResult();
+            }
+            mAuthToken = future.getString(AccountManager.KEY_AUTHTOKEN);
+            Log.i("getApiConnection", mAuthToken);
             connection.setRequestProperty("Authorization", "Bearer " + mAuthToken);
+            return connection;
         } catch (IOException e) {
-            // TODO: Handle.
+            e.printStackTrace();
+            throw new RuntimeException(e);
+            // TODO: Handle properly.
+        } catch (OperationCanceledException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+            // TODO: Handle properly.
+        } catch (AuthenticatorException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+            // TODO: Handle properly.
         }
-        return connection;
     }
 
     /**
@@ -149,11 +183,16 @@ public final class IDashApi {
             rd.close();
             return new JSONObject(sb.toString());
         } catch (IOException e) {
-            // TODO: Handle.
+            e.printStackTrace();
+            throw new RuntimeException(e);
+            // TODO: Handle properly.
         } catch (JSONException e) {
-            // TODO: Handle.
+            e.printStackTrace();
+            throw new RuntimeException(e);
+            // TODO: Handle properly.
+        } finally {
+            if (connection != null) { connection.disconnect(); }
         }
-        return null;
     }
 
     /** Creates an HTML parameter string from a HashMap, eg: ?param1=value1&param2=value2 */
@@ -162,7 +201,7 @@ public final class IDashApi {
         for (String key : params.keySet()) {
             sb.append(key).append("=").append(params.get(key)).append("&");
         }
-        sb.deleteCharAt(sb.length());
+        sb.deleteCharAt(sb.length() - 1);
         return sb.toString();
     }
 

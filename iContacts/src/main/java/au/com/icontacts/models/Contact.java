@@ -1,17 +1,23 @@
 package au.com.icontacts.models;
 
+import android.content.Context;
 import android.text.TextUtils;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import com.j256.ormlite.android.apptools.OpenHelperManager;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
+
+import au.com.icontacts.helpers.DatabaseHelper;
 
 /**
  * Stores the basic information about a Contact.
  */
 @DatabaseTable(tableName = "contacts")
 public class Contact {
+    private DatabaseHelper databaseHelper = null;
+
     public static final String ID_FIELD_NAME = "_id";
     public static final String FIRST_NAME_FIELD_NAME = "first_name";
     public static final String MIDDLE_NAME_FIELD_NAME = "middle_name";
@@ -50,6 +56,13 @@ public class Contact {
         // For ORMLite
     }
 
+    public Contact(Context context, int id) {
+        this.id = id;
+        getHelper(context).getContactsDao().refresh(this);
+        // TODO: Check whether I should actually be releasing this here
+        OpenHelperManager.releaseHelper();
+    }
+
     public int getId() {
         return this.id;
     }
@@ -72,5 +85,12 @@ public class Contact {
 
     public String getEmail() {
         return email;
+    }
+
+    protected DatabaseHelper getHelper(Context context) {
+        if (databaseHelper == null) {
+            databaseHelper = OpenHelperManager.getHelper(context, DatabaseHelper.class);
+        }
+        return databaseHelper;
     }
 }

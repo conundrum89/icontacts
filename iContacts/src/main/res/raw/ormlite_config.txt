@@ -1,0 +1,40 @@
+#
+# generated on 2013/11/13 02:41:43
+#
+# --table-start--
+dataClass=au.com.icontacts.models.Contact
+tableName=contacts
+# --table-fields-start--
+# --field-start--
+fieldName=id
+columnName=_id
+id=true
+# --field-end--
+# --field-start--
+fieldName=firstName
+columnName=first_name
+# --field-end--
+# --field-start--
+fieldName=middleName
+columnName=middle_name
+# --field-end--
+# --field-start--
+fieldName=lastName
+columnName=last_name
+canBeNull=false
+# --field-end--
+# --field-start--
+fieldName=email
+columnName=email
+# --field-end--
+# --field-start--
+fieldName=isLandlord
+columnName=is_landlord
+# --field-end--
+# --field-start--
+fieldName=isVendor
+columnName=is_vendor
+# --field-end--
+# --table-fields-end--
+# --table-end--
+#################################

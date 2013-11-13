@@ -55,6 +55,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
     public SyncAdapter(Context context, boolean autoInitialize) {
         super(context, autoInitialize);
         mContext = context;
+        mNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         mBuilder = new NotificationCompat.Builder(mContext)
                 .setContentText(mContext.getString(R.string.sync_title))
                 .setSmallIcon(R.drawable.ic_launcher);
@@ -100,6 +101,10 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
          *  - Handle data conflicts
          *  - Close connections, clean up temp files and caches
          */
+        if (mDatabaseHelper != null) {
+            OpenHelperManager.releaseHelper();
+            mDatabaseHelper = null;
+        }
     }
 
     /** Sync ALL the data! */
@@ -117,8 +122,6 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
 
     /** Loads contacts... */
     private void loadContacts() throws JSONException {
-        RuntimeExceptionDao<Contact, Integer> dao = getHelper().getContactsDao();
-
         JSONObject contactPage;
         JSONArray contactList;
         int contactId;
@@ -143,12 +146,27 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         }
     }
 
-    private void loadContact(int contactId) {
+    /** Uses gson to load a single contact's details, and return them if valid */
+    private void loadContact(int contactId) throws JSONException {
+        RuntimeExceptionDao<Contact, Integer> dao = getHelper().getContactsDao();
         JSONObject jContact;
         Contact contact;
 
-        // jContact = IDashApi.getContact(contactId);
-        // contact = mGson.fromJson(jContact.toString(), Contact.class);
+        jContact = IDashApi.getContact(contactId);
+        contact = mGson.fromJson(jContact.toString(), Contact.class);
+
+        if (contactIsValid(contact)) {
+            // TODO: Set landlord/vendor status
+
+            dao.create(contact);
+
+            // TODO: Create phone numbers and addresses
+        }
+    }
+
+    private boolean contactIsValid(Contact contact) {
+        return !contact.getLastName().equals("");
+        // TODO: Log failed validations?
     }
 
     private void setLastSyncTime() {
@@ -158,7 +176,7 @@ public class SyncAdapter extends AbstractThreadedSyncAdapter {
         editor.commit();
     }
 
-    void setNotificationProgress(String content, int progress, boolean indeterminate) {
+    private void setNotificationProgress(String content, int progress, boolean indeterminate) {
         mBuilder.setContentText(content)
                 .setProgress(mContactCount, progress, indeterminate);
         mNotificationManager.notify(0, mBuilder.build());

@@ -11,6 +11,7 @@ import com.j256.ormlite.table.TableUtils;
 
 import java.sql.SQLException;
 
+import au.com.icontacts.R;
 import au.com.icontacts.models.Contact;
 
 /**
@@ -24,7 +25,7 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
     private RuntimeExceptionDao<Contact, Integer> contactsRuntimeDao = null;
 
     public DatabaseHelper(Context context) {
-        super(context, DATABASE_NAME, null, DATABASE_VERSION); //, R.raw.ormlite_config);
+        super(context, DATABASE_NAME, null, DATABASE_VERSION, R.raw.ormlite_config);
     }
 
     /** Creates the underlying database with table name and column names. */
